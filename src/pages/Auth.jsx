@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Activity } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { supabase } from '../utils/supabase';
 
 export default function Auth() {
   const [mode, setMode] = useState('login');
@@ -10,6 +11,12 @@ export default function Auth() {
   const [role, setRole] = useState('patient'); // patient | doctor
   const navigate = useNavigate();
   
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const inputStyle = {
     width: '100%',
     padding: '16px 18px',
@@ -24,8 +31,42 @@ export default function Auth() {
     transition: 'border-color 0.2s',
   };
 
-  const handleAuth = () => {
-    navigate('/home');
+  const handleAuth = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (mode === 'signup') {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              role: role
+            }
+          }
+        });
+        if (error) throw error;
+        // If email confirmation is off or successful, user might be logged in
+        if (data.session) {
+          navigate('/home');
+        } else {
+          setError('Account created! Please check your email to verify (or try logging in if verification is off).');
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+        navigate('/home');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,7 +102,7 @@ export default function Auth() {
           {['login', 'signup'].map(m => (
             <button 
               key={m} 
-              onClick={() => setMode(m)} 
+              onClick={() => { setMode(m); setError(null); }} 
               style={{
                 flex: 1,
                 padding: '12px',
@@ -82,27 +123,50 @@ export default function Auth() {
           <AnimatePresence>
             {mode === 'signup' && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                <input placeholder="Full Name" style={inputStyle} />
+                <input 
+                  placeholder="Full Name" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  style={inputStyle} 
+                />
               </motion.div>
             )}
           </AnimatePresence>
-          <input placeholder="Email address" type="email" style={inputStyle} />
+          <input 
+            placeholder="Email address" 
+            type="email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle} 
+          />
           
           <div style={{ position: 'relative' }}>
-            <input placeholder="Password" type={showPw ? 'text' : 'password'} style={inputStyle} />
+            <input 
+              placeholder="Password" 
+              type={showPw ? 'text' : 'password'} 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={inputStyle} 
+            />
             <button 
               onClick={() => setShowPw(!showPw)} 
               style={{
                 position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--color-text-faint)', display: 'flex',
+                color: 'var(--color-text-faint)', display: 'flex', border: 'none', background: 'transparent', cursor: 'pointer'
               }}
             >
               {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          <Button onClick={handleAuth} style={{ marginTop: '12px' }}>
-            {mode === 'login' ? 'Sign In' : 'Create Account'}
+          {error && (
+            <div style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', marginTop: '4px' }}>
+              {error}
+            </div>
+          )}
+
+          <Button onClick={handleAuth} style={{ marginTop: '12px' }} disabled={loading}>
+            {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
           </Button>
         </div>
 
@@ -112,7 +176,7 @@ export default function Auth() {
           </span>
           <button 
             onClick={() => setRole(r => r === 'patient' ? 'doctor' : 'patient')} 
-            style={{ color: 'var(--color-primary)', fontSize: '14px', fontWeight: 700 }}
+            style={{ color: 'var(--color-primary)', fontSize: '14px', fontWeight: 700, border: 'none', background: 'transparent', cursor: 'pointer' }}
           >
             {role === 'patient' ? 'Register as Doctor' : 'Switch to Patient'}
           </button>

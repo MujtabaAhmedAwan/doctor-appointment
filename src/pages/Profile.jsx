@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Settings, Bell, CircleHelp, Shield } from 'lucide-react';
 import Avatar from '../components/ui/Avatar';
+import { supabase } from '../utils/supabase';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -42,7 +43,10 @@ export default function Profile() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <motion.button 
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/auth')}
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/auth');
+            }}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               padding: '16px', borderRadius: '16px', background: 'var(--color-danger-light)',
