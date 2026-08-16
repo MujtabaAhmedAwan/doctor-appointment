@@ -18,7 +18,12 @@ const MY_HISTORY = [
 
 export default function Visits() {
   const [tab, setTab] = useState('upcoming');
-  const list = tab === 'upcoming' ? MY_APPOINTMENTS : MY_HISTORY;
+  const [upcoming, setUpcoming] = useState(MY_APPOINTMENTS);
+  const list = tab === 'upcoming' ? upcoming : MY_HISTORY;
+
+  const handleCancel = (id) => {
+    setUpcoming(prev => prev.filter(apt => apt.id !== id));
+  };
 
   return (
     <div style={{ overflowY: 'auto', height: '100%', paddingBottom: '100px', display: 'flex', flexDirection: 'column' }}>
@@ -93,7 +98,12 @@ export default function Visits() {
                 {tab === 'upcoming' && (
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <Button variant="outline" style={{ flex: 1, padding: '10px', fontSize: '13px' }}>Reschedule</Button>
-                    <Button style={{ flex: 1, padding: '10px', fontSize: '13px', background: 'var(--color-danger)', boxShadow: 'none' }}>Cancel</Button>
+                    <Button 
+                      style={{ flex: 1, padding: '10px', fontSize: '13px', background: 'var(--color-danger)', boxShadow: 'none' }}
+                      onClick={() => handleCancel(apt.id)}
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 )}
                 {tab === 'history' && (
