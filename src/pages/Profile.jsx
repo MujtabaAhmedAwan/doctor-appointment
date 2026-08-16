@@ -38,50 +38,8 @@ export default function Profile() {
       </div>
 
       <div style={{ padding: '32px 20px' }}>
-        
-        {/* Settings Options */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-          {options.map((opt, i) => {
-            const Icon = opt.icon;
-            return (
-              <motion.button 
-                key={i} 
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
-                  background: '#fff', borderRadius: '16px', border: '1px solid var(--color-border)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <div style={{ 
-                  width: '40px', height: '40px', background: 'var(--color-background)', 
-                  borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                }}>
-                  <Icon size={20} color="var(--color-primary)" />
-                </div>
-                <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)', flex: 1, textAlign: 'left' }}>
-                  {opt.label}
-                </span>
-                <span style={{ color: 'var(--color-text-faint)' }}>→</span>
-              </motion.button>
-            );
-          })}
-        </div>
-
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <motion.button 
-            whileTap={{ scale: 0.98 }}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.5)',
-              border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)',
-              fontSize: '15px', fontWeight: 700
-            }}
-          >
-            Switch to Doctor Account
-          </motion.button>
-          
           <motion.button 
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/auth')}

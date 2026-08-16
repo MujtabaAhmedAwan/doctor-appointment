@@ -38,8 +38,8 @@ export default function Dashboard() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', margin: 0, fontWeight: 500 }}>Good morning 👋</p>
-            <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '4px 0 0' }}>Muhammad Majid</h2>
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', margin: 0, fontWeight: 500 }}>Developed by</p>
+            <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '4px 0 0' }}>Malik M Mujtaba Ahmed Ali Awan</h2>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <motion.button 
