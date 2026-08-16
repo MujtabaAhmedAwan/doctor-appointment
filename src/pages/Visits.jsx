@@ -21,10 +21,17 @@ import { useNavigate } from 'react-router-dom';
 export default function Visits() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('upcoming');
-  const [upcoming, setUpcoming] = useState(MY_APPOINTMENTS);
+  const [upcoming, setUpcoming] = useState([...MY_APPOINTMENTS]);
   const list = tab === 'upcoming' ? upcoming : MY_HISTORY;
 
   const handleCancel = (id) => {
+    // Make cancel permanent in memory for the session
+    const idx = MY_APPOINTMENTS.findIndex(a => a.id === id);
+    if (idx > -1) {
+      const apt = MY_APPOINTMENTS.splice(idx, 1)[0];
+      apt.status = 'Cancelled';
+      MY_HISTORY.unshift(apt);
+    }
     setUpcoming(prev => prev.filter(apt => apt.id !== id));
   };
 
@@ -109,8 +116,11 @@ export default function Visits() {
                     </Button>
                   </div>
                 )}
-                {tab === 'history' && (
+                {tab === 'history' && apt.status !== 'Cancelled' && (
                   <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.id}`)}>Book Again</Button>
+                )}
+                {tab === 'history' && apt.status === 'Cancelled' && (
+                  <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px', opacity: 0.5, cursor: 'not-allowed' }}>Cancelled</Button>
                 )}
               </motion.div>
             ))}
