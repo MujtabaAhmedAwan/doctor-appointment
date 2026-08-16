@@ -34,7 +34,7 @@ export default function Profile() {
             borderRadius: '50%', background: 'var(--color-accent)', border: '3px solid #0284C7' 
           }} />
         </div>
-        <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '0 0 4px' }}>Muhammad Majid</h2>
+        <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '0 0 4px' }}>Malik Muhammad Mujtaba Ahmed Ali Awan</h2>
         <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '15px', margin: 0 }}>majid@example.com</p>
       </div>
 
