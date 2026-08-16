@@ -15,8 +15,8 @@ export default function BottomNav() {
     { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
   ];
 
-  // Hide nav on onboarding and auth
-  if (['onboarding', 'auth'].includes(active)) return null;
+  // Hide nav on onboarding, auth, and sub-flows like booking
+  if (active.startsWith('onboarding') || active.startsWith('auth') || active.startsWith('book')) return null;
 
   return (
     <motion.nav
