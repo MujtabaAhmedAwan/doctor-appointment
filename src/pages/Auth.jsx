@@ -50,17 +50,28 @@ export default function Auth() {
         if (error) throw error;
         // If email confirmation is off or successful, user might be logged in
         if (data.session) {
-          navigate('/home');
+          const userRole = data.user.user_metadata?.role || 'patient';
+          if (userRole === 'doctor') {
+            navigate('/doctor-dashboard');
+          } else {
+            navigate('/home');
+          }
         } else {
           setError('Account created! Please check your email to verify (or try logging in if verification is off).');
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
         if (error) throw error;
-        navigate('/home');
+        
+        const userRole = data.user.user_metadata?.role || 'patient';
+        if (userRole === 'doctor') {
+          navigate('/doctor-dashboard');
+        } else {
+          navigate('/home');
+        }
       }
     } catch (err) {
       setError(err.message);

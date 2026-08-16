@@ -33,3 +33,8 @@ export const MY_HISTORY = [
   {id: 3, doctor: "Dr. Priya Sharma", specialty: "Pediatrician", date: "Mon, Jul 14 @ 10:00 AM", status: "Completed", type: "In-person", color: "#22C55E", img: "PS"},
   {id: 4, doctor: "Dr. James Wilson", specialty: "Orthopedic", date: "Thu, Jun 26 @ 3:30 PM", status: "Completed", type: "In-person", color: "#F59E0B", img: "JW"},
 ];
+
+export const INCOMING_REQUESTS = [
+  {id: 101, patient: "Ali Khan", date: "Mon, Oct 12 @ 10:00 AM", type: "In-person", status: "Pending", img: "AK", color: "#3B82F6", reason: "General Checkup" },
+  {id: 102, patient: "Sara Ahmed", date: "Tue, Oct 13 @ 2:30 PM", type: "Video", status: "Pending", img: "SA", color: "#EC4899", reason: "Fever and Cough" }
+];

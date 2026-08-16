@@ -16,7 +16,7 @@ export default function BottomNav() {
   ];
 
   // Hide nav on onboarding, auth, and sub-flows like booking
-  if (active.startsWith('onboarding') || active.startsWith('auth') || active.startsWith('book')) return null;
+  if (active.startsWith('onboarding') || active.startsWith('auth') || active.startsWith('book') || active.startsWith('doctor-dashboard')) return null;
 
   return (
     <motion.nav

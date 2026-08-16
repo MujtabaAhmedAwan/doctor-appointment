@@ -10,6 +10,7 @@ import DoctorProfile from './pages/DoctorProfile';
 import BookingFlow from './pages/BookingFlow';
 import Visits from './pages/Visits';
 import Profile from './pages/Profile';
+import DoctorDashboard from './pages/DoctorDashboard';
 import BottomNav from './components/BottomNav';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/home" element={<Dashboard />} />
+            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
             <Route path="/doctors" element={<SpecialistDirectory />} />
             <Route path="/doctor/:id" element={<DoctorProfile />} />
             <Route path="/book/:id" element={<BookingFlow />} />
