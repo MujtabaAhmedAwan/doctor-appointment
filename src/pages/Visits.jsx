@@ -16,7 +16,10 @@ const MY_HISTORY = [
   {id: 4, doctor: "Dr. James Wilson", specialty: "Orthopedic", date: "Thu, Jun 26 @ 3:30 PM", status: "Completed", type: "In-person", color: "#F59E0B", img: "JW"},
 ];
 
+import { useNavigate } from 'react-router-dom';
+
 export default function Visits() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('upcoming');
   const [upcoming, setUpcoming] = useState(MY_APPOINTMENTS);
   const list = tab === 'upcoming' ? upcoming : MY_HISTORY;
@@ -97,7 +100,7 @@ export default function Visits() {
 
                 {tab === 'upcoming' && (
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <Button variant="outline" style={{ flex: 1, padding: '10px', fontSize: '13px' }}>Reschedule</Button>
+                    <Button variant="outline" style={{ flex: 1, padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.id}`)}>Reschedule</Button>
                     <Button 
                       style={{ flex: 1, padding: '10px', fontSize: '13px', background: 'var(--color-danger)', boxShadow: 'none' }}
                       onClick={() => handleCancel(apt.id)}
@@ -107,7 +110,7 @@ export default function Visits() {
                   </div>
                 )}
                 {tab === 'history' && (
-                  <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px' }}>Book Again</Button>
+                  <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.id}`)}>Book Again</Button>
                 )}
               </motion.div>
             ))}
