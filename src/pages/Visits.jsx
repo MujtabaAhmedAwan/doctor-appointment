@@ -5,17 +5,7 @@ import { Calendar, Video, User } from 'lucide-react';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-
-const MY_APPOINTMENTS = [
-  {id: 1, doctor: "Dr. Sarah Chen", specialty: "Cardiologist", date: "Fri, Aug 22 @ 9:45 AM", status: "Confirmed", type: "In-person", color: "#0EA5E9", img: "SC"},
-  {id: 2, doctor: "Dr. Ahmed Malik", specialty: "Neurologist", date: "Wed, Sep 3 @ 2:00 PM", status: "Pending", type: "Video", color: "#8B5CF6", img: "AM"},
-];
-
-const MY_HISTORY = [
-  {id: 3, doctor: "Dr. Priya Sharma", specialty: "Pediatrician", date: "Mon, Jul 14 @ 10:00 AM", status: "Completed", type: "In-person", color: "#22C55E", img: "PS"},
-  {id: 4, doctor: "Dr. James Wilson", specialty: "Orthopedic", date: "Thu, Jun 26 @ 3:30 PM", status: "Completed", type: "In-person", color: "#F59E0B", img: "JW"},
-];
-
+import { MY_APPOINTMENTS, MY_HISTORY } from '../utils/data';
 import { useNavigate } from 'react-router-dom';
 
 export default function Visits() {

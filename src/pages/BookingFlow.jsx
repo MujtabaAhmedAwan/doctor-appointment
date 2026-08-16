@@ -5,7 +5,7 @@ import { ArrowLeft, Calendar as CalendarIcon, Clock, Video, User } from 'lucide-
 
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/Button';
-import { DOCTORS } from '../utils/data';
+import { DOCTORS, MY_APPOINTMENTS } from '../utils/data';
 
 export default function BookingFlow() {
   const { id } = useParams();
@@ -33,7 +33,25 @@ export default function BookingFlow() {
   const TIME_SLOTS_PM = ['1:00 PM', '2:00 PM', '2:30 PM', '3:00 PM', '4:00 PM', '4:30 PM'];
 
   const handleBook = () => {
-    if (selTime) setBooked(true);
+    if (selTime) {
+      setBooked(true);
+      const dayName = dayNames[daysList[selDate].getDay()];
+      const monthName = monthNames[daysList[selDate].getMonth()];
+      const dateNum = daysList[selDate].getDate();
+      
+      const newBooking = {
+        id: Date.now(), // Generate unique ID
+        doctor: doctor.name,
+        specialty: doctor.specialty,
+        date: `${dayName}, ${monthName} ${dateNum} @ ${selTime}`,
+        status: 'Confirmed',
+        type: type === 'video' ? 'Video' : 'In-person',
+        color: doctor.color,
+        img: doctor.img
+      };
+      
+      MY_APPOINTMENTS.unshift(newBooking);
+    }
   };
 
   if (booked) {
