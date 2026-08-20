@@ -1,20 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Video, User, Check, X, Bell } from 'lucide-react';
+import { Calendar, Video, User, Check, X, Trash2 } from 'lucide-react';
 
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { INCOMING_REQUESTS } from '../utils/data';
+import { supabase } from '../utils/supabase';
+import { getAppointmentsByDoctor, updateAppointmentStatus, deleteAppointment } from '../utils/mockDb';
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
-  const [requests, setRequests] = useState(INCOMING_REQUESTS);
+  const [appointments, setAppointments] = useState([]);
+  const [doctorInfo, setDoctorInfo] = useState({ name: 'Doctor', specialty: 'Specialist', timing: '', initials: 'DR', id: null });
+  const [activeTab, setActiveTab] = useState('requests'); // requests, confirmed, cancelled
   
-  const handleAction = (id, action) => {
-    setRequests(prev => prev.filter(req => req.id !== id));
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const meta = user.user_metadata || {};
+      const name = meta.full_name || 'Doctor';
+      setDoctorInfo({
+        name,
+        specialty: meta.specialty || 'General',
+        timing: meta.timing || 'Standard Hours',
+        initials: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        id: user.id
+      });
+      
+      const appts = getAppointmentsByDoctor(user.id);
+      setAppointments(appts);
+    }
   };
+
+  const handleAction = (id, action) => {
+    if (action === 'accept') {
+      updateAppointmentStatus(id, 'Confirmed');
+    } else if (action === 'decline' || action === 'cancel') {
+      updateAppointmentStatus(id, 'Cancelled');
+    } else if (action === 'delete') {
+      deleteAppointment(id);
+    }
+    
+    // Refresh
+    if (doctorInfo.id) {
+      setAppointments(getAppointmentsByDoctor(doctorInfo.id));
+    }
+  };
+
+  const pendingReqs = appointments.filter(a => a.status === 'Pending');
+  const confirmedReqs = appointments.filter(a => a.status === 'Confirmed');
+  const cancelledReqs = appointments.filter(a => a.status === 'Cancelled');
+
+  const displayedAppointments = activeTab === 'requests' ? pendingReqs : 
+                                activeTab === 'confirmed' ? confirmedReqs : cancelledReqs;
 
   return (
     <div style={{ overflowY: 'auto', height: '100%', paddingBottom: '100px', display: 'flex', flexDirection: 'column' }}>
@@ -35,7 +78,9 @@ export default function DoctorDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '13px', margin: 0, fontWeight: 500 }}>Doctor Portal</p>
-            <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '4px 0 0' }}>Dr. Mujtaba</h2>
+            <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '4px 0 0' }}>{doctorInfo.name}</h2>
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', marginTop: '4px' }}>{doctorInfo.specialty}</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '2px' }}>Timing: {doctorInfo.timing}</div>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <motion.button 
@@ -46,7 +91,7 @@ export default function DoctorDashboard() {
                 borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none'
               }}
             >
-              <Avatar initials="DM" color="var(--color-accent-dark)" size={42} />
+              <Avatar initials={doctorInfo.initials} color="var(--color-accent-dark)" size={42} />
             </motion.button>
           </div>
         </div>
@@ -54,34 +99,52 @@ export default function DoctorDashboard() {
         {/* Stats Row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
           <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '14px', padding: '12px 10px', textAlign: 'center' }}>
-            <div style={{ color: '#fff', fontSize: '20px', fontWeight: 800 }}>{requests.length}</div>
+            <div style={{ color: '#fff', fontSize: '20px', fontWeight: 800 }}>{pendingReqs.length}</div>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: 600 }}>New Requests</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '14px', padding: '12px 10px', textAlign: 'center' }}>
-            <div style={{ color: '#fff', fontSize: '20px', fontWeight: 800 }}>4</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: 600 }}>Today's Appts</div>
+            <div style={{ color: '#fff', fontSize: '20px', fontWeight: 800 }}>{confirmedReqs.length}</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: 600 }}>Confirmed</div>
           </div>
         </div>
       </motion.div>
 
+      {/* Tabs */}
+      <div style={{ padding: '0 20px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', background: 'var(--color-surface)', borderRadius: '16px', padding: '6px' }}>
+          {['requests', 'confirmed', 'cancelled'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1, padding: '10px 0', fontSize: '13px', fontWeight: 700, borderRadius: '12px',
+                background: activeTab === tab ? 'var(--color-accent)' : 'transparent',
+                color: activeTab === tab ? '#fff' : 'var(--color-text-faint)',
+                border: 'none', cursor: 'pointer', textTransform: 'capitalize'
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Requests List */}
       <div style={{ padding: '0 20px', flex: 1 }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text)', margin: '0 0 16px' }}>Incoming Requests</h3>
-        
-        <AnimatePresence>
-          {requests.length === 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '40px 0' }}>
+        <AnimatePresence mode="popLayout">
+          {displayedAppointments.length === 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ textAlign: 'center', padding: '40px 0' }}>
               <div style={{ width: '64px', height: '64px', background: 'var(--color-surface)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Check size={32} color="var(--color-text-faint)" />
               </div>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '15px' }}>All caught up! No pending requests.</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '15px' }}>No {activeTab} appointments.</p>
             </motion.div>
           )}
 
-          {requests.map((req, i) => (
+          {displayedAppointments.map((req, i) => (
             <motion.div 
               key={req.id} 
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.05 }}
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.05 }}
               style={{
                 background: '#fff', borderRadius: '20px', padding: '20px',
                 boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border)', marginBottom: '16px'
@@ -89,7 +152,7 @@ export default function DoctorDashboard() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', gap: '14px' }}>
-                  <Avatar initials={req.img} color={req.color} size={52} />
+                  <Avatar initials={req.patient.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()} color="#3B82F6" size={52} />
                   <div>
                     <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text)', marginBottom: '4px' }}>{req.patient}</div>
                     <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{req.reason}</div>
@@ -109,20 +172,40 @@ export default function DoctorDashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
+              {activeTab === 'requests' && (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <Button 
+                    style={{ flex: 1, padding: '12px', fontSize: '14px', background: 'var(--color-accent)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
+                    onClick={() => handleAction(req.id, 'accept')}
+                  >
+                    <Check size={18} /> Accept
+                  </Button>
+                  <Button 
+                    style={{ flex: 1, padding: '12px', fontSize: '14px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', boxShadow: 'none' }}
+                    onClick={() => handleAction(req.id, 'decline')}
+                  >
+                    <X size={18} /> Decline
+                  </Button>
+                </div>
+              )}
+
+              {activeTab === 'confirmed' && (
                 <Button 
-                  style={{ flex: 1, padding: '12px', fontSize: '14px', background: 'var(--color-accent)', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
-                  onClick={() => handleAction(req.id, 'accept')}
+                  style={{ width: '100%', padding: '12px', fontSize: '14px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', boxShadow: 'none' }}
+                  onClick={() => handleAction(req.id, 'cancel')}
                 >
-                  <Check size={18} /> Accept
+                  <X size={18} /> Cancel Appointment
                 </Button>
+              )}
+
+              {activeTab === 'cancelled' && (
                 <Button 
-                  style={{ flex: 1, padding: '12px', fontSize: '14px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', boxShadow: 'none' }}
-                  onClick={() => handleAction(req.id, 'decline')}
+                  style={{ width: '100%', padding: '12px', fontSize: '14px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', boxShadow: 'none' }}
+                  onClick={() => handleAction(req.id, 'delete')}
                 >
-                  <X size={18} /> Decline
+                  <Trash2 size={18} /> Delete Record
                 </Button>
-              </div>
+              )}
             </motion.div>
           ))}
         </AnimatePresence>

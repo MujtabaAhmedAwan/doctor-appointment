@@ -7,6 +7,7 @@ import Avatar from '../components/ui/Avatar';
 import Stars from '../components/ui/Stars';
 import Button from '../components/ui/Button';
 import { DOCTORS } from '../utils/data';
+import { getCustomDoctors } from '../utils/mockDb';
 
 export default function SpecialistDirectory() {
   const navigate = useNavigate();
@@ -15,7 +16,9 @@ export default function SpecialistDirectory() {
   
   const specs = ['All', 'Cardio', 'Neuro', 'Pediatric', 'Ortho', 'Derma', 'Eye'];
 
-  const filtered = DOCTORS.filter(d => 
+  const allDoctors = [...DOCTORS, ...getCustomDoctors()];
+
+  const filtered = allDoctors.filter(d => 
     (selSpec === 'All' || d.specialty.toLowerCase().includes(selSpec.toLowerCase())) &&
     (d.name.toLowerCase().includes(search.toLowerCase()) || d.specialty.toLowerCase().includes(search.toLowerCase()))
   );

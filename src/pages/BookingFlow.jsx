@@ -5,12 +5,15 @@ import { ArrowLeft, Calendar as CalendarIcon, Clock, Video, User } from 'lucide-
 
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/Button';
-import { DOCTORS, MY_APPOINTMENTS } from '../utils/data';
+import { DOCTORS } from '../utils/data';
+import { createAppointment, getCustomDoctors } from '../utils/mockDb';
+import { supabase } from '../utils/supabase';
 
 export default function BookingFlow() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const doctor = DOCTORS.find(d => d.id === parseInt(id));
+  const allDoctors = [...DOCTORS, ...getCustomDoctors()];
+  const doctor = allDoctors.find(d => d.id.toString() === id.toString());
   
   const [type, setType] = useState('inperson'); // inperson | video
   const [selDate, setSelDate] = useState(0); // index of days
@@ -32,25 +35,31 @@ export default function BookingFlow() {
   const TIME_SLOTS_AM = ['9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'];
   const TIME_SLOTS_PM = ['1:00 PM', '2:00 PM', '2:30 PM', '3:00 PM', '4:00 PM', '4:30 PM'];
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (selTime) {
-      setBooked(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      const patientName = user?.user_metadata?.full_name || 'Guest Patient';
+      const patientId = user?.id || 'guest';
+
       const dayName = dayNames[daysList[selDate].getDay()];
       const monthName = monthNames[daysList[selDate].getMonth()];
       const dateNum = daysList[selDate].getDate();
       
       const newBooking = {
-        id: Date.now(), // Generate unique ID
-        doctor: doctor.name,
+        patient: patientName,
+        patientId: patientId,
+        doctorId: doctor.id.toString(), // Store doctor ID for matching
+        doctorName: doctor.name,
         specialty: doctor.specialty,
         date: `${dayName}, ${monthName} ${dateNum} @ ${selTime}`,
-        status: 'Confirmed',
         type: type === 'video' ? 'Video' : 'In-person',
         color: doctor.color,
-        img: doctor.img
+        img: doctor.img,
+        reason: "General Consultation" // default
       };
       
-      MY_APPOINTMENTS.unshift(newBooking);
+      createAppointment(newBooking);
+      setBooked(true);
     }
   };
 

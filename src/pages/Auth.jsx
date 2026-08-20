@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Activity } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { supabase } from '../utils/supabase';
+import { SPECIALTIES } from '../utils/data';
+import { registerCustomDoctor } from '../utils/mockDb';
 
 export default function Auth() {
   const [mode, setMode] = useState('login');
@@ -14,6 +16,8 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [timing, setTiming] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -43,7 +47,9 @@ export default function Auth() {
           options: {
             data: {
               full_name: fullName,
-              role: role
+              role: role,
+              specialty: role === 'doctor' ? specialty : null,
+              timing: role === 'doctor' ? timing : null
             }
           }
         });
@@ -52,6 +58,15 @@ export default function Auth() {
         if (data.session) {
           const userRole = data.user.user_metadata?.role || 'patient';
           if (userRole === 'doctor') {
+            registerCustomDoctor({
+              id: data.user.id,
+              name: fullName,
+              specialty: specialty || 'General',
+              timing: timing || 'Standard',
+              rating: 0, reviews: 0, exp: "New", available: true, price: 1500,
+              img: fullName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(),
+              color: "#0EA5E9", location: "Online", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], services: ["Consultation"]
+            });
             navigate('/doctor-dashboard');
           } else {
             navigate('/home');
@@ -133,13 +148,35 @@ export default function Auth() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <AnimatePresence>
             {mode === 'signup' && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <input 
                   placeholder="Full Name" 
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   style={inputStyle} 
                 />
+                
+                {role === 'doctor' && (
+                  <>
+                    <select 
+                      value={specialty} 
+                      onChange={(e) => setSpecialty(e.target.value)} 
+                      style={inputStyle}
+                    >
+                      <option value="" disabled>Select Specialty</option>
+                      {SPECIALTIES.map(s => (
+                        <option key={s.id} value={s.name}>{s.emoji} {s.name}</option>
+                      ))}
+                    </select>
+
+                    <input 
+                      placeholder="e.g. Mon-Fri, 9:00 AM - 5:00 PM" 
+                      value={timing}
+                      onChange={(e) => setTiming(e.target.value)}
+                      style={inputStyle} 
+                    />
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

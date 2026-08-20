@@ -1,29 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Video, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { MY_APPOINTMENTS, MY_HISTORY } from '../utils/data';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabase';
+import { getAppointmentsByPatient, updateAppointmentStatus } from '../utils/mockDb';
 
 export default function Visits() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('upcoming');
-  const [upcoming, setUpcoming] = useState([...MY_APPOINTMENTS]);
-  const list = tab === 'upcoming' ? upcoming : MY_HISTORY;
+  const [appointments, setAppointments] = useState([]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setAppointments(getAppointmentsByPatient(user.id));
+    }
+  };
 
   const handleCancel = (id) => {
-    // Make cancel permanent in memory for the session
-    const idx = MY_APPOINTMENTS.findIndex(a => a.id === id);
-    if (idx > -1) {
-      const apt = MY_APPOINTMENTS.splice(idx, 1)[0];
-      apt.status = 'Cancelled';
-      MY_HISTORY.unshift(apt);
-    }
-    setUpcoming(prev => prev.filter(apt => apt.id !== id));
+    updateAppointmentStatus(id, 'Cancelled');
+    fetchAppointments();
   };
+
+  const upcoming = appointments.filter(a => a.status === 'Pending' || a.status === 'Confirmed');
+  const history = appointments.filter(a => a.status === 'Cancelled' || a.status === 'Completed');
+
+  const list = tab === 'upcoming' ? upcoming : history;
 
   return (
     <div style={{ overflowY: 'auto', height: '100%', paddingBottom: '100px', display: 'flex', flexDirection: 'column' }}>
@@ -59,6 +69,12 @@ export default function Visits() {
       {/* List */}
       <div style={{ padding: '24px 20px', flex: 1 }}>
         <AnimatePresence mode="wait">
+          {list.length === 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', marginTop: '40px' }}>
+               <p style={{ color: 'var(--color-text-muted)', fontSize: '15px' }}>No {tab} appointments found.</p>
+            </motion.div>
+          )}
+
           <motion.div 
             key={tab} 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
@@ -77,7 +93,7 @@ export default function Visits() {
                   <div style={{ display: 'flex', gap: '14px' }}>
                     <Avatar initials={apt.img} color={apt.color} size={52} />
                     <div>
-                      <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text)', marginBottom: '4px' }}>{apt.doctor}</div>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text)', marginBottom: '4px' }}>{apt.doctorName}</div>
                       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{apt.specialty}</div>
                     </div>
                   </div>
@@ -97,7 +113,7 @@ export default function Visits() {
 
                 {tab === 'upcoming' && (
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <Button variant="outline" style={{ flex: 1, padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.id}`)}>Reschedule</Button>
+                    <Button variant="outline" style={{ flex: 1, padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.doctorId}`)}>Reschedule</Button>
                     <Button 
                       style={{ flex: 1, padding: '10px', fontSize: '13px', background: 'var(--color-danger)', boxShadow: 'none' }}
                       onClick={() => handleCancel(apt.id)}
@@ -107,7 +123,7 @@ export default function Visits() {
                   </div>
                 )}
                 {tab === 'history' && apt.status !== 'Cancelled' && (
-                  <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.id}`)}>Book Again</Button>
+                  <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px' }} onClick={() => navigate(`/book/${apt.doctorId}`)}>Book Again</Button>
                 )}
                 {tab === 'history' && apt.status === 'Cancelled' && (
                   <Button variant="outline" style={{ width: '100%', padding: '10px', fontSize: '13px', opacity: 0.5, cursor: 'not-allowed' }}>Cancelled</Button>
